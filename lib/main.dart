@@ -30,16 +30,28 @@ class MyApp extends StatelessWidget {
   }
 }
 
+/// MyAppState 是一個 ChangeNotifier，管理 APP 的狀態
+///  * [current] 是一個隨機的英文單字
+///  * [favorites] 是一個英文單字的收藏列表
+///  * [getNext] 改變 [current] 的值
+///  * [toggleFavorite] 在 [favorites] 中 toggle [current] 的值
 class MyAppState extends ChangeNotifier {
+  /// 產生一個隨機的英文單字
   var current = WordPair.random();
 
+  /// 改變 [current] 的值
   void getNext() {
     current = WordPair.random();
+    /// 監聽器通知其他元件更新
     notifyListeners();
   }
 
+  /// 單字收藏列表
   var favorites = <WordPair>[];
 
+  /// 在 [favorites] 中 toggle [current] 的值
+  /// 如果 [favorites] 中已經包含 [current]，則將其 remove
+  /// 否則，將 [current] add 到 [favorites] 中
   void toggleFavorite() {
     if (favorites.contains(current)) {
       favorites.remove(current);
@@ -61,17 +73,13 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
   Widget build(BuildContext context) {
-    Widget page;
-    switch (selectedIndex) {
-      case 0:
-        page = GeneratorPage();
-        break;
-      case 1:
-        page = Placeholder();
-        break;
-      default:
-        throw UnimplementedError('no widget for $selectedIndex');
-    }
+
+    Widget page = switch (selectedIndex) {
+      0 => GeneratorPage(),
+      1 => FavoritesPage(),
+      _ => Placeholder(),
+      // _ => throw UnimplementedError('no widget for $selectedIndex'),
+    };
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -80,9 +88,9 @@ class _MyHomePageState extends State<MyHomePage> {
             children: [
               SafeArea(
                 child: NavigationRail(
-                  extended: constraints.maxWidth >= 600,
+                  extended: constraints.maxWidth >= 650,
                   destinations: [
-                    NavigationRailDestination(
+                      NavigationRailDestination(
                       icon: Icon(Icons.home),
                       label: Text('Home'),
                     ),
@@ -113,7 +121,7 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 }
 
-class GeneratorPage  extends StatelessWidget {
+class GeneratorPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     var appState = context.watch<MyAppState>();
@@ -123,44 +131,73 @@ class GeneratorPage  extends StatelessWidget {
       ? Icons.favorite
       : Icons.favorite_border;
 
-    return Scaffold(
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            // Text(
-            //   'A random A idea:',
-            //   style: TextStyle(
-            //     fontSize: 16,
-            //     color: Colors.pink,
-            //     backgroundColor: Colors.yellow,
-            //   ),
-            // ),
-            BigCard(pair: pair),
-            SizedBox(height: 20),
-            Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                ElevatedButton.icon(
-                  onPressed: () {
-                    appState.toggleFavorite();
-                  },
-                  icon: Icon(icon),
-                  label: Text('Like'),
-                ),
-                SizedBox(width: 10),
-                ElevatedButton(
-                  onPressed: () {
-                    // print('button pressed!');
-                    appState.getNext();
-                  },
-                  child: Text('Next'),
-                ),
-              ],
-            ),
-          ],
-        ),
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          // Text(
+          //   'A random A idea:',
+          //   style: TextStyle(
+          //     fontSize: 16,
+          //     color: Colors.pink,
+          //     backgroundColor: Colors.yellow,
+          //   ),
+          // ),
+          BigCard(pair: pair),
+          SizedBox(height: 20),
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ElevatedButton.icon(
+                onPressed: () {
+                  appState.toggleFavorite();
+                },
+                icon: Icon(icon),
+                label: Text('Like'),
+              ),
+              SizedBox(width: 10),
+              ElevatedButton(
+                onPressed: () {
+                  // print('button pressed!');
+                  appState.getNext();
+                },
+                child: Text('Next'),
+              ),
+            ],
+          ),
+        ],
       ),
+    );
+  }
+}
+
+class FavoritesPage extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    var appState = context.watch<MyAppState>();
+
+    if (appState.favorites.isEmpty) {
+      return Center(
+        child: Text(
+          '尚未收藏任何單字 !',
+          style: TextStyle(fontSize: 24, color: Colors.grey),
+        ),
+      );
+    }
+
+    return ListView(
+      children: [
+        Padding(
+          padding: EdgeInsets.all(24),
+          child: Text('你已經收藏 '
+              '${appState.favorites.length} 筆單字~'),
+        ),
+        for(var pair in appState.favorites)
+          ListTile(
+            leading: Icon(Icons.favorite),
+            title: Text(pair.asLowerCase),
+          ),
+      ],
     );
   }
 }
@@ -179,6 +216,7 @@ class BigCard extends StatelessWidget {
     final style = theme.textTheme.displayMedium!.copyWith(
       color: theme.colorScheme.onPrimary,
     );
+    print(pair);
     return Card(
       color: theme.colorScheme.primary,
       child: Padding(
