@@ -62,18 +62,22 @@ class MyAppState extends ChangeNotifier {
   }
 }
 
+/// 首頁
+///
+/// 顯示一個 TabBar，分別顯示產生隨機英文單字的頁面和收藏列表的頁面
 class MyHomePage extends StatefulWidget {
   @override
   State<MyHomePage> createState() => _MyHomePageState();
 }
 
 class _MyHomePageState extends State<MyHomePage> {
+  /// 目前的索引
+  int selectedIndex = 0;
 
-  var selectedIndex = 0;
-
+  /// 產生 Scaffold 的內容
   @override
   Widget build(BuildContext context) {
-
+    /// 產生要顯示的 Widget
     Widget page = switch (selectedIndex) {
       0 => GeneratorPage(),
       1 => FavoritesPage(),
@@ -81,39 +85,46 @@ class _MyHomePageState extends State<MyHomePage> {
       // _ => throw UnimplementedError('no widget for $selectedIndex'),
     };
 
+    /// 產生 Scaffold
     return LayoutBuilder(
       builder: (context, constraints) {
-        return Scaffold(
-          body: Row(
-            children: [
-              SafeArea(
-                child: NavigationRail(
-                  extended: constraints.maxWidth >= 650,
-                  destinations: [
+        return SafeArea(
+          child: Scaffold(
+            /// 產生 NavigationRail
+            body: Row(
+              children: [
+                SafeArea(
+                  child: NavigationRail(
+                    /// 產生 NavigationRailDestination
+                    extended: constraints.maxWidth >= 650,
+                    destinations: [
+                        NavigationRailDestination(
+                        icon: Icon(Icons.home),
+                        label: Text('Home'),
+                      ),
                       NavigationRailDestination(
-                      icon: Icon(Icons.home),
-                      label: Text('Home'),
-                    ),
-                    NavigationRailDestination(
-                      icon: Icon(Icons.favorite),
-                      label: Text('Favorites'),
-                    ),
-                  ],
-                  selectedIndex: selectedIndex,
-                  onDestinationSelected: (value) {
-                    setState(() {
-                      selectedIndex = value;
-                    });
-                  },
+                        icon: Icon(Icons.favorite),
+                        label: Text('Favorites'),
+                      ),
+                    ],
+                    /// 產生 NavigationRail 的選擇
+                    selectedIndex: selectedIndex,
+                    onDestinationSelected: (value) {
+                      setState(() {
+                        selectedIndex = value;
+                      });
+                    },
+                  ),
                 ),
-              ),
-              Expanded(
-                child: Container(
-                  color: Theme.of(context).colorScheme.primaryContainer,
-                  child: page,
+                /// 產生一個 Container 並將 page 顯示於其中
+                Expanded(
+                  child: Container(
+                    color: Theme.of(context).colorScheme.primaryContainer,
+                    child: page,
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         );
       }
